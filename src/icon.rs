@@ -83,8 +83,9 @@ pub fn rgba(size: u32, color: [u8; 3]) -> Vec<u8> {
 pub fn argb(size: u32, color: [u8; 3]) -> Vec<u8> {
     let rgba = rgba(size, color);
     let mut out = Vec::with_capacity(rgba.len());
-    for px in rgba.chunks_exact(4) {
-        out.extend_from_slice(&[px[3], px[0], px[1], px[2]]);
+    // RGBA vira ARGB: o alfa sai da última posição para a primeira.
+    for i in (0..rgba.len()).step_by(4) {
+        out.extend_from_slice(&[rgba[i + 3], rgba[i], rgba[i + 1], rgba[i + 2]]);
     }
     out
 }
