@@ -30,7 +30,9 @@ pub struct Limits {
 fn token(dir: &Path) -> Option<String> {
     let txt = std::fs::read_to_string(dir.join(".credentials.json")).ok()?;
     let v: serde_json::Value = serde_json::from_str(&txt).ok()?;
-    v["claudeAiOauth"]["accessToken"].as_str().map(str::to_string)
+    v["claudeAiOauth"]["accessToken"]
+        .as_str()
+        .map(str::to_string)
 }
 
 fn cache_path(dir: &Path) -> std::path::PathBuf {
@@ -44,7 +46,9 @@ fn cache_path(dir: &Path) -> std::path::PathBuf {
 fn ler_cache(dir: &Path, aceitar_velho: bool) -> Option<Limits> {
     let p = cache_path(dir);
     let meta = std::fs::metadata(&p).ok()?;
-    let idade = SystemTime::now().duration_since(meta.modified().ok()?).ok()?;
+    let idade = SystemTime::now()
+        .duration_since(meta.modified().ok()?)
+        .ok()?;
     if !aceitar_velho && idade > VALIDADE {
         return None;
     }
@@ -52,8 +56,12 @@ fn ler_cache(dir: &Path, aceitar_velho: bool) -> Option<Limits> {
     Some(Limits {
         uso_5h: v["uso_5h"].as_f64()?,
         uso_7d: v["uso_7d"].as_f64()?,
-        reset_5h: v["reset_5h"].as_i64().and_then(|s| Utc.timestamp_opt(s, 0).single()),
-        reset_7d: v["reset_7d"].as_i64().and_then(|s| Utc.timestamp_opt(s, 0).single()),
+        reset_5h: v["reset_5h"]
+            .as_i64()
+            .and_then(|s| Utc.timestamp_opt(s, 0).single()),
+        reset_7d: v["reset_7d"]
+            .as_i64()
+            .and_then(|s| Utc.timestamp_opt(s, 0).single()),
         status: v["status"].as_str().unwrap_or("").to_string(),
         obtido_em: v["obtido_em"]
             .as_str()
@@ -137,4 +145,3 @@ pub fn get(dir: &Path) -> Option<Limits> {
     }
     consultar(dir).or_else(|| ler_cache(dir, true))
 }
-

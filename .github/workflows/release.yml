@@ -1,0 +1,49 @@
+name: release
+
+# Publica um binário pronto sempre que uma tag de versão é empurrada.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar toolchain
+        run: |
+          rustup target add x86_64-unknown-linux-musl
+          sudo apt-get update
+          # musl-tools traz o musl-gcc, exigido pelo TLS (ring) ao compilar estático
+          sudo apt-get install -y musl-tools
+
+      - name: Compilar estático
+        # Estático com musl para rodar em qualquer distro, sem depender da
+        # versão da glibc da máquina de quem instala.
+        run: cargo build --release --target x86_64-unknown-linux-musl
+
+      - name: Conferir que é mesmo estático
+        run: |
+          file target/x86_64-unknown-linux-musl/release/ccswitch
+          ldd target/x86_64-unknown-linux-musl/release/ccswitch || true
+
+      - name: Empacotar
+        run: |
+          mkdir -p dist
+          cp target/x86_64-unknown-linux-musl/release/ccswitch dist/
+          cp README.md LICENSE dist/
+          tar -C dist -czf ccswitch-x86_64-linux.tar.gz ccswitch README.md LICENSE
+          sha256sum ccswitch-x86_64-linux.tar.gz > ccswitch-x86_64-linux.tar.gz.sha256
+
+      - name: Publicar release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ccswitch-x86_64-linux.tar.gz
+            ccswitch-x86_64-linux.tar.gz.sha256
+          generate_release_notes: true

@@ -6,9 +6,9 @@ mod launch;
 mod limits;
 mod pick;
 mod real;
-mod usage;
 mod sessions;
 mod state;
+mod usage;
 
 mod tray_linux;
 
@@ -72,7 +72,10 @@ fn main() -> ExitCode {
             println!("\nPATH");
             let bin = accounts::bin_dir();
             println!("  shim instalado em: {}", bin.display());
-            println!("  shim na frente do PATH: {}", yes_no(install::shim_wins_path()));
+            println!(
+                "  shim na frente do PATH: {}",
+                yes_no(install::shim_wins_path())
+            );
             let nome = "claude";
             for dir in std::env::split_paths(&std::env::var_os("PATH").unwrap_or_default()) {
                 if dir.join(nome).exists() {
@@ -82,12 +85,18 @@ fn main() -> ExitCode {
             }
 
             println!("\nContas");
-            println!("  ativa: {}", accounts::active_name().unwrap_or_else(|| "nenhuma".into()));
+            println!(
+                "  ativa: {}",
+                accounts::active_name().unwrap_or_else(|| "nenhuma".into())
+            );
             match std::env::var("CLAUDE_CONFIG_DIR") {
                 Ok(v) => println!("  CLAUDE_CONFIG_DIR já definido neste processo: {v}"),
                 Err(_) => println!("  CLAUDE_CONFIG_DIR não definido (o shim vai resolver)"),
             }
-            println!("  perguntar a cada sessão: {}", yes_no(accounts::get_flag("ask_on_launch")));
+            println!(
+                "  perguntar a cada sessão: {}",
+                yes_no(accounts::get_flag("ask_on_launch"))
+            );
             ExitCode::SUCCESS
         }
 
@@ -99,7 +108,11 @@ fn main() -> ExitCode {
                 _ => {
                     println!(
                         "perguntar a conta a cada sessão: {}",
-                        if accounts::get_flag("ask_on_launch") { "ligado" } else { "desligado" }
+                        if accounts::get_flag("ask_on_launch") {
+                            "ligado"
+                        } else {
+                            "desligado"
+                        }
                     );
                     println!("uso: ccswitch ask on | off");
                     return ExitCode::SUCCESS;
@@ -107,7 +120,10 @@ fn main() -> ExitCode {
             };
             match accounts::set_flag("ask_on_launch", on) {
                 Ok(()) => {
-                    println!("perguntar a cada sessão: {}", if on { "ligado" } else { "desligado" });
+                    println!(
+                        "perguntar a cada sessão: {}",
+                        if on { "ligado" } else { "desligado" }
+                    );
                     ExitCode::SUCCESS
                 }
                 Err(e) => {
@@ -118,15 +134,13 @@ fn main() -> ExitCode {
         }
 
         // Usado pelos shims: imprime o config dir da conta ativa e mais nada.
-        "resolve" => {
-            match accounts::active_name().and_then(|n| accounts::find(&n)) {
-                Some(acc) if acc.dir.is_dir() => {
-                    println!("{}", acc.dir.display());
-                    ExitCode::SUCCESS
-                }
-                _ => ExitCode::FAILURE,
+        "resolve" => match accounts::active_name().and_then(|n| accounts::find(&n)) {
+            Some(acc) if acc.dir.is_dir() => {
+                println!("{}", acc.dir.display());
+                ExitCode::SUCCESS
             }
-        }
+            _ => ExitCode::FAILURE,
+        },
 
         "use" | "switch" => match args.get(1) {
             Some(name) => match accounts::set_active(name) {
@@ -195,7 +209,14 @@ fn main() -> ExitCode {
                 .unwrap_or_default();
             let Some(acc) = accounts::find(&nome) else {
                 eprintln!("uso: ccswitch login <conta>");
-                eprintln!("contas: {}", accounts::load().iter().map(|a| a.name.clone()).collect::<Vec<_>>().join(", "));
+                eprintln!(
+                    "contas: {}",
+                    accounts::load()
+                        .iter()
+                        .map(|a| a.name.clone())
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                );
                 return ExitCode::FAILURE;
             };
             println!("abrindo o login da conta '{}'...", acc.name);
@@ -215,7 +236,10 @@ fn main() -> ExitCode {
         "list" | "ls" | "status" => {
             let st = state::State::load();
             if st.accounts.is_empty() {
-                println!("nenhuma conta registrada em {}", accounts::conf_path().display());
+                println!(
+                    "nenhuma conta registrada em {}",
+                    accounts::conf_path().display()
+                );
                 return ExitCode::FAILURE;
             }
             for i in 0..st.accounts.len() {
@@ -225,8 +249,14 @@ fn main() -> ExitCode {
             }
             println!();
             println!("shim instalado: {}", yes_no(install::shim_installed()));
-            println!("shim na frente do PATH: {}", yes_no(install::shim_wins_path()));
-            println!("inicia com o sistema: {}", yes_no(install::autostart_enabled()));
+            println!(
+                "shim na frente do PATH: {}",
+                yes_no(install::shim_wins_path())
+            );
+            println!(
+                "inicia com o sistema: {}",
+                yes_no(install::autostart_enabled())
+            );
             ExitCode::SUCCESS
         }
 
@@ -234,7 +264,10 @@ fn main() -> ExitCode {
         "detect" | "detectar" => {
             let mut achados = detect::procurar();
             if achados.is_empty() {
-                println!("Nenhuma conta do Claude Code encontrada em {}", accounts::home().display());
+                println!(
+                    "Nenhuma conta do Claude Code encontrada em {}",
+                    accounts::home().display()
+                );
                 println!("Crie uma com: ccswitch add <nome>");
                 return ExitCode::SUCCESS;
             }
@@ -256,7 +289,10 @@ fn main() -> ExitCode {
                 println!("      {}", a.dir.display());
             }
             if !novos.is_empty() {
-                println!("\n{} conta(s) registrada(s). Veja: ccswitch list", novos.len());
+                println!(
+                    "\n{} conta(s) registrada(s). Veja: ccswitch list",
+                    novos.len()
+                );
             }
             ExitCode::SUCCESS
         }
@@ -326,7 +362,10 @@ fn main() -> ExitCode {
             let data = icon::rgba(size, icon::color_for(&name));
             match std::fs::write(format!("icon-{name}-{size}.rgba"), &data) {
                 Ok(()) => ExitCode::SUCCESS,
-                Err(e) => { eprintln!("erro: {e}"); ExitCode::FAILURE }
+                Err(e) => {
+                    eprintln!("erro: {e}");
+                    ExitCode::FAILURE
+                }
             }
         }
 

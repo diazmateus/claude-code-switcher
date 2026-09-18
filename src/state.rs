@@ -2,8 +2,8 @@
 
 use crate::accounts::{self, Account, AccountInfo};
 use crate::install;
-use crate::sessions;
 use crate::limits::{self, Limits};
+use crate::sessions;
 use crate::usage::{self, Usage};
 
 pub struct State {
@@ -27,7 +27,10 @@ impl State {
             .and_then(|n| accounts.iter().position(|a| a.name == n))
             .unwrap_or(0);
         let infos = accounts.iter().map(|a| accounts::info(&a.dir)).collect();
-        let sessions = accounts.iter().map(|a| sessions::count_for(&a.dir)).collect();
+        let sessions = accounts
+            .iter()
+            .map(|a| sessions::count_for(&a.dir))
+            .collect();
         Self {
             accounts,
             infos,
@@ -59,12 +62,22 @@ impl State {
         self.usos = self
             .accounts
             .iter()
-            .map(|a| antigos.iter().find(|(n, ..)| n == &a.name).and_then(|(_, u, _)| u.clone()))
+            .map(|a| {
+                antigos
+                    .iter()
+                    .find(|(n, ..)| n == &a.name)
+                    .and_then(|(_, u, _)| u.clone())
+            })
             .collect();
         self.limites = self
             .accounts
             .iter()
-            .map(|a| antigos.iter().find(|(n, ..)| n == &a.name).and_then(|(.., l)| l.clone()))
+            .map(|a| {
+                antigos
+                    .iter()
+                    .find(|(n, ..)| n == &a.name)
+                    .and_then(|(.., l)| l.clone())
+            })
             .collect();
     }
 
@@ -93,10 +106,10 @@ impl State {
 
     /// Troca a conta das próximas sessões. Nada em andamento é afetado.
     pub fn switch(&mut self, i: usize) {
-        if let Some(acc) = self.accounts.get(i) {
-            if accounts::set_active(&acc.name).is_ok() {
-                self.active = i;
-            }
+        if let Some(acc) = self.accounts.get(i)
+            && accounts::set_active(&acc.name).is_ok()
+        {
+            self.active = i;
         }
     }
 
@@ -113,7 +126,10 @@ impl State {
             return Vec::new();
         }
         let mut out = vec![format!("   {}", self.accounts[i].name)];
-        let eq = |t: Option<u64>| t.map(|t| format!("  ·  {} eq", usage::fmt_tokens(t))).unwrap_or_default();
+        let eq = |t: Option<u64>| {
+            t.map(|t| format!("  ·  {} eq", usage::fmt_tokens(t)))
+                .unwrap_or_default()
+        };
 
         match &l {
             Some(l) => {
@@ -194,7 +210,10 @@ impl State {
                 let who = accounts::label(acc, info);
                 let total: usize = self.sessions.iter().sum();
                 if total > 0 {
-                    format!("Claude Code: novas sessões em '{}' ({who})\n{total} sessão(ões) em andamento", acc.name)
+                    format!(
+                        "Claude Code: novas sessões em '{}' ({who})\n{total} sessão(ões) em andamento",
+                        acc.name
+                    )
                 } else {
                     format!("Claude Code: novas sessões em '{}' ({who})", acc.name)
                 }
@@ -205,7 +224,10 @@ impl State {
 }
 
 /// "14:10" quando é hoje, "22/09 20:00" quando não é.
-fn fmt_reset(t: Option<chrono::DateTime<chrono::Utc>>, agora: chrono::DateTime<chrono::Utc>) -> String {
+fn fmt_reset(
+    t: Option<chrono::DateTime<chrono::Utc>>,
+    agora: chrono::DateTime<chrono::Utc>,
+) -> String {
     let Some(t) = t else { return "?".into() };
     let local = t.with_timezone(&chrono::Local);
     if local.date_naive() == agora.with_timezone(&chrono::Local).date_naive() {

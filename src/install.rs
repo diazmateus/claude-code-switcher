@@ -12,7 +12,9 @@ use std::io;
 pub struct Report(pub Vec<String>);
 
 impl Report {
-    fn say(&mut self, s: impl Into<String>) { self.0.push(s.into()); }
+    fn say(&mut self, s: impl Into<String>) {
+        self.0.push(s.into());
+    }
 }
 
 const SHIM_SH: &str = r##"#!/usr/bin/env bash
@@ -138,7 +140,6 @@ pub fn shim_wins_path() -> bool {
     false
 }
 
-
 const MARK_BEGIN: &str = "# >>> claude-accounts (ccswitch) >>>";
 const MARK_END: &str = "# <<< claude-accounts (ccswitch) <<<";
 
@@ -209,7 +210,9 @@ pub fn install_path(r: &mut Report) -> io::Result<()> {
     fs::create_dir_all(envd.parent().unwrap())?;
     fs::write(&envd, format!("PATH={}:${{PATH}}\n", bin.display()))?;
     r.say(format!("PATH para apps gráficos em {}", envd.display()));
-    r.say("apps já abertos (Cursor, VS Code) só enxergam o PATH novo depois de reiniciar".to_string());
+    r.say(
+        "apps já abertos (Cursor, VS Code) só enxergam o PATH novo depois de reiniciar".to_string(),
+    );
     Ok(())
 }
 
@@ -238,7 +241,9 @@ pub fn set_autostart(on: bool, r: &mut Report) -> io::Result<()> {
 }
 
 pub fn autostart_enabled() -> bool {
-    accounts::home().join(".config/autostart/claude-switcher.desktop").exists()
+    accounts::home()
+        .join(".config/autostart/claude-switcher.desktop")
+        .exists()
 }
 
 pub fn install_all(autostart: bool) -> io::Result<Report> {
@@ -251,4 +256,3 @@ pub fn install_all(autostart: bool) -> io::Result<Report> {
     }
     Ok(r)
 }
-

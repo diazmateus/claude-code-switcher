@@ -70,7 +70,10 @@ impl ksni::Tray for Switcher {
                 .into(),
             );
             let options: Vec<RadioItem> = (0..self.st.accounts.len())
-                .map(|i| RadioItem { label: self.st.entry_label(i), ..Default::default() })
+                .map(|i| RadioItem {
+                    label: self.st.entry_label(i),
+                    ..Default::default()
+                })
                 .collect();
             items.push(
                 RadioGroup {
@@ -98,7 +101,12 @@ impl ksni::Tray for Switcher {
             for i in 0..self.st.accounts.len() {
                 for linha in self.st.linhas_uso(i) {
                     items.push(
-                        StandardItem { label: linha, enabled: false, ..Default::default() }.into(),
+                        StandardItem {
+                            label: linha,
+                            enabled: false,
+                            ..Default::default()
+                        }
+                        .into(),
                     );
                 }
             }
@@ -192,23 +200,27 @@ pub fn run() -> Result<(), String> {
         return Err("nenhuma conta em accounts.conf".into());
     }
     let tray = Switcher { st: State::load() };
-    let handle = tray.spawn().map_err(|e| format!("bandeja indisponível: {e}"))?;
+    let handle = tray
+        .spawn()
+        .map_err(|e| format!("bandeja indisponível: {e}"))?;
 
     // Uso é caro (centenas de ms): calcula fora e injeta pronto, para nunca
     // segurar o laço que atende o menu.
     {
         let h = handle.clone();
-        std::thread::spawn(move || loop {
-            let contas = accounts::load();
-            let (usos, limites) = State::calcular_usos(&contas);
-            let atualizar = move |t: &mut Switcher| {
-                t.st.usos = usos.clone();
-                t.st.limites = limites.clone();
-            };
-            if h.update(atualizar).is_none() {
-                return;
+        std::thread::spawn(move || {
+            loop {
+                let contas = accounts::load();
+                let (usos, limites) = State::calcular_usos(&contas);
+                let atualizar = move |t: &mut Switcher| {
+                    t.st.usos = usos.clone();
+                    t.st.limites = limites.clone();
+                };
+                if h.update(atualizar).is_none() {
+                    return;
+                }
+                std::thread::sleep(std::time::Duration::from_secs(60));
             }
-            std::thread::sleep(std::time::Duration::from_secs(60));
         });
     }
 

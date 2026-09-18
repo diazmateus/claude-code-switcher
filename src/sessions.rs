@@ -18,7 +18,11 @@ pub fn count_for(dir: &Path) -> usize {
     for entry in entries.flatten() {
         let p = entry.path();
         // So diretorios numericos: /proc/<pid>
-        if !p.file_name().and_then(|s| s.to_str()).is_some_and(|s| s.bytes().all(|b| b.is_ascii_digit())) {
+        if !p
+            .file_name()
+            .and_then(|s| s.to_str())
+            .is_some_and(|s| s.bytes().all(|b| b.is_ascii_digit()))
+        {
             continue;
         }
         // O executavel precisa se chamar "claude".
@@ -39,7 +43,9 @@ pub fn count_for(dir: &Path) -> usize {
             }
         }
         // Sem a variavel, a sessao esta no dir default do Claude Code.
-        let used = found.map(std::path::PathBuf::from).unwrap_or_else(|| default_dir.clone());
+        let used = found
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|| default_dir.clone());
         if used == dir {
             n += 1;
         }
@@ -74,6 +80,8 @@ pub fn count_total() -> usize {
 
 #[allow(dead_code)]
 pub fn count_total() -> usize {
-    crate::accounts::load().iter().map(|a| count_for(&a.dir)).sum()
+    crate::accounts::load()
+        .iter()
+        .map(|a| count_for(&a.dir))
+        .sum()
 }
-

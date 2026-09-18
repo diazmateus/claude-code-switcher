@@ -39,7 +39,9 @@ fn nome_sugerido(dir: &Path) -> String {
 fn uuid_de(dir: &Path) -> Option<String> {
     let txt = std::fs::read_to_string(dir.join(".claude.json")).ok()?;
     let v: serde_json::Value = serde_json::from_str(&txt).ok()?;
-    v["oauthAccount"]["accountUuid"].as_str().map(str::to_string)
+    v["oauthAccount"]["accountUuid"]
+        .as_str()
+        .map(str::to_string)
 }
 
 /// Varre o home atrás de diretórios de conta.
@@ -51,7 +53,10 @@ pub fn procurar() -> Vec<Achado> {
     if let Ok(entradas) = std::fs::read_dir(&home) {
         for e in entradas.flatten() {
             let p = e.path();
-            let nome = p.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_default();
+            let nome = p
+                .file_name()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_default();
             if (nome == ".claude" || nome.starts_with(".claude-")) && eh_config_dir(&p) {
                 candidatos.push(p);
             }
@@ -80,7 +85,9 @@ pub fn procurar() -> Vec<Achado> {
         });
         let registrada = registradas.iter().find(|a| a.dir == dir);
         achados.push(Achado {
-            nome: registrada.map(|a| a.name.clone()).unwrap_or_else(|| nome_sugerido(&dir)),
+            nome: registrada
+                .map(|a| a.name.clone())
+                .unwrap_or_else(|| nome_sugerido(&dir)),
             dir,
             email: info.email,
             registrada: registrada.is_some(),

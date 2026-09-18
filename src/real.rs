@@ -10,7 +10,9 @@ pub const MARCA: &str = "claude-accounts-shim";
 
 /// Script de texto com a marca = é um shim nosso, não o Claude Code.
 fn eh_shim(p: &Path) -> bool {
-    let Ok(dados) = std::fs::read(p) else { return false };
+    let Ok(dados) = std::fs::read(p) else {
+        return false;
+    };
     // Binário real é executável; shim é texto curto.
     if dados.len() > 64 * 1024 {
         return false;
@@ -19,7 +21,11 @@ fn eh_shim(p: &Path) -> bool {
 }
 
 fn aceita(p: PathBuf) -> Option<PathBuf> {
-    if p.is_file() && !eh_shim(&p) { Some(p) } else { None }
+    if p.is_file() && !eh_shim(&p) {
+        Some(p)
+    } else {
+        None
+    }
 }
 
 /// Candidatos conhecidos, do mais provável ao menos.
@@ -101,7 +107,11 @@ pub fn diagnostico() -> Vec<(PathBuf, &'static str)> {
         out.push((c, estado));
     }
     if let Some(v) = versao_mais_recente() {
-        let estado = if eh_shim(&v) { "é o shim (ignorado)" } else { "ENCONTRADO" };
+        let estado = if eh_shim(&v) {
+            "é o shim (ignorado)"
+        } else {
+            "ENCONTRADO"
+        };
         out.push((v, estado));
     }
     if let Some(p) = no_path() {

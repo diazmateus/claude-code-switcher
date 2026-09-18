@@ -77,7 +77,8 @@ a AppIndicator do seu desktop.
 **Claude Code instalado.** Se ainda não tem, veja
 [claude.com/claude-code](https://claude.com/claude-code).
 
-**Rust**, usado para compilar. Se você não tem, a forma oficial é:
+**Rust**, apenas se você for compilar do código. Quem instala pelo binário
+pronto não precisa. A forma oficial é:
 
 ```sh
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -88,7 +89,27 @@ Confira com `cargo --version`. Também dá para instalar pelo gerenciador de
 pacotes (`apt install cargo`, `dnf install cargo`), mas versões de distribuição
 costumam ficar para trás. É preciso Rust 1.85 ou mais novo.
 
-### Compilar
+### Instalar
+
+A forma mais curta, com o binário já compilado:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/diazmateus/claude-code-switcher/main/install.sh | sh
+```
+
+O script baixa o binário da release mais recente, confere o checksum e coloca em
+`~/.local/bin`. Não usa `sudo` e não escreve fora do seu diretório pessoal. Se
+preferir ler antes de executar, e é uma boa prática, abra o
+[install.sh](install.sh).
+
+Se você já tem Rust e prefere compilar, dá para instalar direto do repositório
+sem clonar nada:
+
+```sh
+cargo install --git https://github.com/diazmateus/claude-code-switcher
+```
+
+Ou clonando, se quiser mexer no código:
 
 ```sh
 git clone https://github.com/diazmateus/claude-code-switcher

@@ -35,20 +35,30 @@ pub fn root() -> PathBuf {
     }
 }
 
-pub fn conf_path() -> PathBuf { root().join("accounts.conf") }
-pub fn active_path() -> PathBuf { root().join("active") }
-pub fn bin_dir() -> PathBuf { root().join("bin") }
-pub fn config_path() -> PathBuf { root().join("config") }
+pub fn conf_path() -> PathBuf {
+    root().join("accounts.conf")
+}
+pub fn active_path() -> PathBuf {
+    root().join("active")
+}
+pub fn bin_dir() -> PathBuf {
+    root().join("bin")
+}
+pub fn config_path() -> PathBuf {
+    root().join("config")
+}
 
 /// Opcoes simples em formato chave=valor.
 pub fn get_flag(key: &str) -> bool {
-    let Ok(text) = fs::read_to_string(config_path()) else { return false };
+    let Ok(text) = fs::read_to_string(config_path()) else {
+        return false;
+    };
     for line in text.lines() {
         let line = line.split('#').next().unwrap_or("").trim();
-        if let Some((k, v)) = line.split_once('=') {
-            if k.trim() == key {
-                return matches!(v.trim(), "1" | "true" | "sim" | "yes");
-            }
+        if let Some((k, v)) = line.split_once('=')
+            && k.trim() == key
+        {
+            return matches!(v.trim(), "1" | "true" | "sim" | "yes");
         }
     }
     false
@@ -59,7 +69,13 @@ pub fn set_flag(key: &str, on: bool) -> std::io::Result<()> {
     let text = fs::read_to_string(config_path()).unwrap_or_default();
     let mut out: Vec<String> = text
         .lines()
-        .filter(|l| !l.split('#').next().unwrap_or("").trim().starts_with(&format!("{key}=")))
+        .filter(|l| {
+            !l.split('#')
+                .next()
+                .unwrap_or("")
+                .trim()
+                .starts_with(&format!("{key}="))
+        })
         .map(str::to_string)
         .collect();
     out.push(format!("{key}={}", if on { "true" } else { "false" }));
@@ -89,7 +105,10 @@ pub fn load() -> Vec<Account> {
             let name = name.trim();
             let dir = dir.trim();
             if !name.is_empty() && !dir.is_empty() {
-                out.push(Account { name: name.to_string(), dir: expand(dir) });
+                out.push(Account {
+                    name: name.to_string(),
+                    dir: expand(dir),
+                });
             }
         }
     }
@@ -144,22 +163,24 @@ pub fn add(name: &str, dir: &Path) -> std::io::Result<()> {
 pub fn info(dir: &Path) -> AccountInfo {
     let mut info = AccountInfo::default();
 
-    if let Ok(txt) = fs::read_to_string(dir.join(".claude.json")) {
-        if let Ok(v) = serde_json::from_str::<serde_json::Value>(&txt) {
-            info.email = v["oauthAccount"]["emailAddress"].as_str().map(str::to_string);
-        }
+    if let Ok(txt) = fs::read_to_string(dir.join(".claude.json"))
+        && let Ok(v) = serde_json::from_str::<serde_json::Value>(&txt)
+    {
+        info.email = v["oauthAccount"]["emailAddress"]
+            .as_str()
+            .map(str::to_string);
     }
-    if let Ok(txt) = fs::read_to_string(dir.join(".credentials.json")) {
-        if let Ok(v) = serde_json::from_str::<serde_json::Value>(&txt) {
-            let oauth = &v["claudeAiOauth"];
-            info.plan = oauth["subscriptionType"].as_str().map(str::to_string);
-            if let Some(ms) = oauth["expiresAt"].as_i64() {
-                let now = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .map(|d| d.as_millis() as i64)
-                    .unwrap_or(0);
-                info.token_expired = ms < now;
-            }
+    if let Ok(txt) = fs::read_to_string(dir.join(".credentials.json"))
+        && let Ok(v) = serde_json::from_str::<serde_json::Value>(&txt)
+    {
+        let oauth = &v["claudeAiOauth"];
+        info.plan = oauth["subscriptionType"].as_str().map(str::to_string);
+        if let Some(ms) = oauth["expiresAt"].as_i64() {
+            let now = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_millis() as i64)
+                .unwrap_or(0);
+            info.token_expired = ms < now;
         }
     }
     info

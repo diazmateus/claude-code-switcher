@@ -36,7 +36,11 @@ fn desenhar(st: &State, cursor_em: usize, primeira_vez: bool) -> io::Result<()> 
     // título + branco (2) + uma por conta (N) + branco (1) + rodapé (1).
     let linhas = (st.accounts.len() + 4) as u16;
     if !primeira_vez {
-        queue!(err, cursor::MoveToPreviousLine(linhas), Clear(ClearType::FromCursorDown))?;
+        queue!(
+            err,
+            cursor::MoveToPreviousLine(linhas),
+            Clear(ClearType::FromCursorDown)
+        )?;
     }
 
     queue!(
@@ -54,7 +58,11 @@ fn desenhar(st: &State, cursor_em: usize, primeira_vez: bool) -> io::Result<()> 
         let seta = if aqui { "›" } else { " " };
         let marca = if ativa { "●" } else { "○" };
         if aqui {
-            queue!(err, SetForegroundColor(Color::Cyan), SetAttribute(Attribute::Bold))?;
+            queue!(
+                err,
+                SetForegroundColor(Color::Cyan),
+                SetAttribute(Attribute::Bold)
+            )?;
         } else {
             queue!(err, SetAttribute(Attribute::Dim))?;
         }
@@ -88,7 +96,15 @@ fn navegar(st: &State) -> Option<usize> {
 
     loop {
         let Ok(ev) = event::read() else { return None };
-        let Event::Key(KeyEvent { code, modifiers, kind, .. }) = ev else { continue };
+        let Event::Key(KeyEvent {
+            code,
+            modifiers,
+            kind,
+            ..
+        }) = ev
+        else {
+            continue;
+        };
         // Terminais que falam o protocolo estendido mandam press e release:
         // sem este filtro, cada tecla contaria duas vezes.
         if kind != event::KeyEventKind::Press {
@@ -97,7 +113,11 @@ fn navegar(st: &State) -> Option<usize> {
 
         match code {
             KeyCode::Up | KeyCode::Char('k') => {
-                cursor_em = if cursor_em == 0 { st.accounts.len() - 1 } else { cursor_em - 1 };
+                cursor_em = if cursor_em == 0 {
+                    st.accounts.len() - 1
+                } else {
+                    cursor_em - 1
+                };
             }
             KeyCode::Down | KeyCode::Char('j') | KeyCode::Tab => {
                 cursor_em = (cursor_em + 1) % st.accounts.len();
@@ -131,7 +151,11 @@ fn fallback(st: &State) -> Option<usize> {
         let marca = if i == st.active { "●" } else { " " };
         let _ = writeln!(err, "   {marca} {}) {}", i + 1, st.entry_label(i));
     }
-    let padrao = st.accounts.get(st.active).map(|a| a.name.as_str()).unwrap_or("");
+    let padrao = st
+        .accounts
+        .get(st.active)
+        .map(|a| a.name.as_str())
+        .unwrap_or("");
     let _ = write!(err, "\n  Enter = {padrao}   › ");
     let _ = err.flush();
 

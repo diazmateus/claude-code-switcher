@@ -64,7 +64,9 @@ fn primeiro_uso(projects: &Path) -> Option<DateTime<Utc>> {
     let mut menor: Option<std::time::SystemTime> = None;
     let dirs = std::fs::read_dir(projects).ok()?;
     for d in dirs.flatten() {
-        let Ok(arquivos) = std::fs::read_dir(d.path()) else { continue };
+        let Ok(arquivos) = std::fs::read_dir(d.path()) else {
+            continue;
+        };
         for f in arquivos.flatten() {
             if f.path().extension().is_none_or(|e| e != "jsonl") {
                 continue;
@@ -89,10 +91,10 @@ fn ancora(dir: &Path, projects: &Path, agora: DateTime<Utc>) -> DateTime<Utc> {
         .unwrap_or_else(|| "conta".into());
     let cache = crate::accounts::root().join(format!("ciclo-{chave}"));
 
-    if let Ok(txt) = std::fs::read_to_string(&cache) {
-        if let Ok(t) = txt.trim().parse::<DateTime<Utc>>() {
-            return t;
-        }
+    if let Ok(txt) = std::fs::read_to_string(&cache)
+        && let Ok(t) = txt.trim().parse::<DateTime<Utc>>()
+    {
+        return t;
     }
     let t = primeiro_uso(projects).unwrap_or(agora);
     let _ = std::fs::create_dir_all(crate::accounts::root());
@@ -114,8 +116,7 @@ pub fn compute(dir: &Path, janelas: Option<(DateTime<Utc>, DateTime<Utc>)>) -> U
         Some((_, ini7)) => (ini7, ini7 + Duration::days(7)),
         None => {
             let ancora = ancora(dir, &projects_dir, agora);
-            let ciclos =
-                ((agora - ancora).num_seconds() / Duration::days(7).num_seconds()).max(0);
+            let ciclos = ((agora - ancora).num_seconds() / Duration::days(7).num_seconds()).max(0);
             let ini = ancora + Duration::days(7 * ciclos);
             (ini, ini + Duration::days(7))
         }
@@ -126,9 +127,13 @@ pub fn compute(dir: &Path, janelas: Option<(DateTime<Utc>, DateTime<Utc>)>) -> U
     let projects = projects_dir;
     let mut eventos: Vec<(DateTime<Utc>, u64)> = Vec::new();
 
-    let Ok(dirs) = std::fs::read_dir(&projects) else { return Usage::default() };
+    let Ok(dirs) = std::fs::read_dir(&projects) else {
+        return Usage::default();
+    };
     for d in dirs.flatten() {
-        let Ok(arquivos) = std::fs::read_dir(d.path()) else { continue };
+        let Ok(arquivos) = std::fs::read_dir(d.path()) else {
+            continue;
+        };
         for f in arquivos.flatten() {
             let p = f.path();
             if p.extension().is_none_or(|e| e != "jsonl") {
@@ -145,13 +150,19 @@ pub fn compute(dir: &Path, janelas: Option<(DateTime<Utc>, DateTime<Utc>)>) -> U
                 if !linha.contains("\"usage\"") {
                     continue;
                 }
-                let Ok(o) = serde_json::from_str::<serde_json::Value>(&linha) else { continue };
+                let Ok(o) = serde_json::from_str::<serde_json::Value>(&linha) else {
+                    continue;
+                };
                 let u = &o["message"]["usage"];
                 if !u.is_object() {
                     continue;
                 }
-                let Some(ts) = o["timestamp"].as_str() else { continue };
-                let Ok(t) = ts.parse::<DateTime<Utc>>() else { continue };
+                let Some(ts) = o["timestamp"].as_str() else {
+                    continue;
+                };
+                let Ok(t) = ts.parse::<DateTime<Utc>>() else {
+                    continue;
+                };
                 if t < corte {
                     continue;
                 }
@@ -227,7 +238,6 @@ pub fn barra(fracao: f64, largura: usize) -> String {
     }
     s
 }
-
 
 impl Usage {
     /// Quanto da janela de 5 horas já correu.
