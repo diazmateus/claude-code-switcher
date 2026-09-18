@@ -1,4 +1,5 @@
 mod accounts;
+mod detect;
 mod icon;
 mod install;
 mod launch;
@@ -185,6 +186,32 @@ fn main() -> ExitCode {
             ExitCode::SUCCESS
         }
 
+        // Entra (ou troca o login) numa conta, sem mexer na conta ativa.
+        "login" => {
+            let nome = args
+                .get(1)
+                .cloned()
+                .or_else(accounts::active_name)
+                .unwrap_or_default();
+            let Some(acc) = accounts::find(&nome) else {
+                eprintln!("uso: ccswitch login <conta>");
+                eprintln!("contas: {}", accounts::load().iter().map(|a| a.name.clone()).collect::<Vec<_>>().join(", "));
+                return ExitCode::FAILURE;
+            };
+            println!("abrindo o login da conta '{}'...", acc.name);
+            let mut cmd = std::process::Command::new("claude");
+            cmd.arg("/login")
+                .env("CLAUDE_CONFIG_DIR", &acc.dir)
+                .env("CLAUDE_ACCOUNT", &acc.name);
+            match cmd.status() {
+                Ok(st) => ExitCode::from(st.code().unwrap_or(0) as u8),
+                Err(e) => {
+                    eprintln!("erro ao iniciar o claude: {e}");
+                    ExitCode::FAILURE
+                }
+            }
+        }
+
         "list" | "ls" | "status" => {
             let st = state::State::load();
             if st.accounts.is_empty() {
@@ -200,6 +227,37 @@ fn main() -> ExitCode {
             println!("shim instalado: {}", yes_no(install::shim_installed()));
             println!("shim na frente do PATH: {}", yes_no(install::shim_wins_path()));
             println!("inicia com o sistema: {}", yes_no(install::autostart_enabled()));
+            ExitCode::SUCCESS
+        }
+
+        // Encontra contas que já existem na máquina e registra as novas.
+        "detect" | "detectar" => {
+            let mut achados = detect::procurar();
+            if achados.is_empty() {
+                println!("Nenhuma conta do Claude Code encontrada em {}", accounts::home().display());
+                println!("Crie uma com: ccswitch add <nome>");
+                return ExitCode::SUCCESS;
+            }
+            let novos = detect::registrar(&mut achados);
+            println!("Contas encontradas\n");
+            for a in &achados {
+                let (marca, situacao) = if let Some(outra) = &a.duplicada_de {
+                    ("!", format!("mesma conta que '{outra}', ignorada"))
+                } else if novos.contains(&a.nome) {
+                    ("+", "registrada agora".to_string())
+                } else {
+                    ("·", "já registrada".to_string())
+                };
+                println!(
+                    "  {marca} {:<12} {:<28} ({situacao})",
+                    a.nome,
+                    a.email.clone().unwrap_or_else(|| "sem login".into()),
+                );
+                println!("      {}", a.dir.display());
+            }
+            if !novos.is_empty() {
+                println!("\n{} conta(s) registrada(s). Veja: ccswitch list", novos.len());
+            }
             ExitCode::SUCCESS
         }
 
@@ -228,6 +286,25 @@ fn main() -> ExitCode {
 
         "install" => {
             let autostart = !args.iter().any(|a| a == "--no-autostart");
+            // Sem contas registradas, procura as que já existem antes de seguir:
+            // é o caso de quem já usava CLAUDE_CONFIG_DIR na mão.
+            if accounts::load().is_empty() {
+                let mut achados = detect::procurar();
+                let novos = detect::registrar(&mut achados);
+                for n in &novos {
+                    if let Some(acc) = accounts::find(n) {
+                        let info = accounts::info(&acc.dir);
+                        println!(
+                            "· conta '{n}' encontrada em {} ({})",
+                            acc.dir.display(),
+                            info.email.unwrap_or_else(|| "sem login".into())
+                        );
+                    }
+                }
+                if let Some(primeira) = novos.first() {
+                    let _ = accounts::set_active(primeira);
+                }
+            }
             match install::install_all(autostart) {
                 Ok(r) => {
                     for line in r.0 {
@@ -303,6 +380,8 @@ fn help() {
   ccswitch list             contas, sessões rodando e estado da instalação
   ccswitch run <conta> ...   sessao pontual em outra conta, sem trocar o padrao
   ccswitch ask on|off       perguntar a conta a cada sessao nova
+  ccswitch detect           procura contas que ja existem e registra
+  ccswitch login <conta>    entra ou troca o login de uma conta
   ccswitch add <nome> [dir] registra uma conta nova
   ccswitch install          instala os atalhos no PATH e o início automático
   ccswitch doctor           diagnóstico: onde está o Claude e se o shim pega

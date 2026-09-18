@@ -68,8 +68,27 @@ executa o Claude Code de verdade.
 
 ## Instalação
 
-Requer Rust e Linux com um indicador de bandeja. No Ubuntu com GNOME, a extensão
-`ubuntu-appindicators` já vem habilitada.
+### Antes de começar
+
+**Linux com um indicador de bandeja.** No Ubuntu com GNOME a extensão
+`ubuntu-appindicators` já vem habilitada. Em outros ambientes, instale o suporte
+a AppIndicator do seu desktop.
+
+**Claude Code instalado.** Se ainda não tem, veja
+[claude.com/claude-code](https://claude.com/claude-code).
+
+**Rust**, usado para compilar. Se você não tem, a forma oficial é:
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+```
+
+Confira com `cargo --version`. Também dá para instalar pelo gerenciador de
+pacotes (`apt install cargo`, `dnf install cargo`), mas versões de distribuição
+costumam ficar para trás. É preciso Rust 1.85 ou mais novo.
+
+### Compilar
 
 ```sh
 git clone https://github.com/diazmateus/claude-code-switcher
@@ -78,29 +97,67 @@ cargo build --release
 install -m 755 target/release/ccswitch ~/.local/bin/ccswitch
 ```
 
-Registre suas contas e instale os atalhos:
+### Registrar suas contas
+
+**Se você já usa mais de uma conta**, provavelmente já tem os diretórios
+criados, por `CLAUDE_CONFIG_DIR` na mão ou por algum alias. O ccswitch encontra
+todos sozinho:
 
 ```sh
-ccswitch add trabalho          # cria ~/.claude-trabalho
-ccswitch add pessoal           # cria ~/.claude-pessoal
-ccswitch install               # shim no PATH e início automático
+ccswitch detect
 ```
 
-Se você já tem diretórios de conta, aponte para eles:
+```
+Contas encontradas
+
+  + trabalho     voce@empresa.com             (registrada agora)
+      /home/voce/.claude
+  + pessoal      voce@gmail.com               (registrada agora)
+      /home/voce/.claude-pessoal
+  ! antiga       voce@gmail.com               (mesma conta que 'pessoal', ignorada)
+      /home/voce/.claude-antiga
+```
+
+Ele varre o seu diretório pessoal atrás de `.claude` e `.claude-*`, lê o email
+de cada um e deixa explícito o que achou. Diretórios que apontam para a **mesma
+conta** aparecem marcados com `!` e são ignorados, em vez de virarem duas
+entradas que fariam você escolher entre opções idênticas.
+
+O `ccswitch install` roda essa mesma detecção sozinho quando ainda não há
+nenhuma conta registrada, então na maioria dos casos você não precisa chamar o
+`detect` à mão.
+
+**Se você ainda não tem uma segunda conta**, crie o diretório e entre nela:
 
 ```sh
-ccswitch add trabalho ~/.claude
+ccswitch add pessoal        # cria ~/.claude-pessoal e registra
+ccswitch login pessoal      # abre o /login do Claude Code naquela conta
 ```
 
-Entre em cada conta pelo menu da bandeja, em "Entrar / trocar login", ou pelo
-terminal:
+O `login` abre o Claude Code apontando para o diretório daquela conta, faz o
+fluxo normal de autenticação e grava a credencial lá dentro. Sua outra conta não
+é tocada, porque cada uma tem o próprio arquivo de credencial. Dá para fazer o
+mesmo pelo menu da bandeja, em "Entrar / trocar login desta conta".
+
+Para registrar um diretório que está fora do padrão:
 
 ```sh
-CLAUDE_CONFIG_DIR=~/.claude-pessoal claude /login
+ccswitch add trabalho ~/algum/outro/caminho
 ```
 
-Abra um terminal novo depois de instalar. Programas já abertos, como o Cursor,
-só enxergam o PATH novo depois de reiniciar.
+### Instalar os atalhos
+
+```sh
+ccswitch install
+```
+
+Isso escreve o shim, coloca o diretório dele na frente do PATH e configura o
+início automático junto com o sistema.
+
+**Abra um terminal novo depois disso.** Programas já abertos, como o Cursor,
+só enxergam o PATH novo depois de reiniciar. Se algo não pegar, rode
+`ccswitch doctor`, que mostra onde o Claude Code foi encontrado e se o shim está
+mesmo na frente do PATH.
 
 ## Comandos
 
@@ -113,7 +170,9 @@ só enxergam o PATH novo depois de reiniciar.
 | `ccswitch list` | Contas, sessões rodando e estado da instalação |
 | `ccswitch usage` | Cota das janelas de 5 horas e 7 dias, por conta |
 | `ccswitch ask on\|off` | Liga ou desliga a pergunta a cada sessão nova |
+| `ccswitch detect` | Procura contas que já existem e registra |
 | `ccswitch add <nome> [dir]` | Registra uma conta |
+| `ccswitch login <conta>` | Entra ou troca o login de uma conta |
 | `ccswitch install` | Instala shim, PATH e início automático |
 | `ccswitch doctor` | Diagnóstico de onde está o Claude e se o shim pega |
 
