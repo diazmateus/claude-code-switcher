@@ -1,7 +1,7 @@
 #!/bin/sh
 # Instalador do ccswitch. Baixa o binário pronto do GitHub Releases.
 #
-#   curl -fsSL https://raw.githubusercontent.com/diazmateus/claude-code-switcher/main/install.sh | sh
+#   curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/diazmateus/claude-code-switcher/main/install.sh | sh
 #
 # Não usa sudo e não escreve fora do seu diretório pessoal.
 set -eu
@@ -19,8 +19,8 @@ case "$(uname -m)" in
 esac
 
 if command -v curl >/dev/null 2>&1; then
-  baixar() { curl -fsSL "$1" -o "$2"; }
-  ler() { curl -fsSL "$1"; }
+  baixar() { curl --proto '=https' --tlsv1.2 -fsSL "$1" -o "$2"; }
+  ler() { curl --proto '=https' --tlsv1.2 -fsSL "$1"; }
 elif command -v wget >/dev/null 2>&1; then
   baixar() { wget -qO "$2" "$1"; }
   ler() { wget -qO- "$1"; }

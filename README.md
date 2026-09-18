@@ -94,7 +94,7 @@ costumam ficar para trás. É preciso Rust 1.85 ou mais novo.
 A forma mais curta, com o binário já compilado:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/diazmateus/claude-code-switcher/main/install.sh | sh
+curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/diazmateus/claude-code-switcher/main/install.sh | sh
 ```
 
 O script baixa o binário da release mais recente, confere o checksum e coloca em
