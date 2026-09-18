@@ -3,6 +3,10 @@
 Troque a conta do Claude Code por um ícone na bandeja do sistema, valendo para
 tudo que abrir depois, sem derrubar nada que já esteja rodando.
 
+Feito e testado no **Ubuntu**. Outras distribuições Linux devem funcionar, mas
+ainda não foram verificadas. macOS e Windows não são suportados, e as
+[limitações conhecidas](#limitações-conhecidas) explicam por quê.
+
 ```
         ┌──────────────────────────────────────────────────────┐
         │  Novas sessões usam:                                 │
@@ -68,9 +72,14 @@ executa o Claude Code de verdade.
 
 ## Requisitos
 
-**Linux com um indicador de bandeja.** No Ubuntu com GNOME a extensão
-`ubuntu-appindicators` já vem habilitada. Em outros ambientes, instale o suporte
-a AppIndicator do seu desktop.
+**Ubuntu**, que é onde o projeto é testado. A extensão `ubuntu-appindicators`
+já vem habilitada, então a bandeja funciona sem configuração.
+
+Outras distribuições Linux devem funcionar desde que tenham um indicador de
+bandeja compatível com AppIndicator, porque a bandeja usa o protocolo
+StatusNotifierItem, que é padrão no Linux. Ainda assim, não foram testadas. Se
+você rodar em outra distro, conte como foi em uma
+[issue](https://github.com/diazmateus/claude-code-switcher/issues).
 
 **Claude Code instalado.** Se ainda não tem, veja
 [claude.com/claude-code](https://claude.com/claude-code).
@@ -303,9 +312,18 @@ menu apenas recolhe o resultado pronto, sem nunca travar.
 
 ## Limitações conhecidas
 
-* **Só Linux.** Houve uma versão para Windows, removida. Lá o PATH alcança
-  apenas programas que procuram o `claude` por conta própria, e integrações que
-  chamam o binário por caminho absoluto continuavam na conta antiga.
+* **Testado só no Ubuntu.** Outras distribuições Linux devem funcionar, mas
+  ninguém verificou ainda.
+* **Sem suporte a Windows.** Existiu e foi removido. Lá o PATH alcança apenas
+  programas que procuram o `claude` por conta própria, e integrações que chamam
+  o binário por caminho absoluto, como o Claude Desktop, continuavam na conta
+  antiga.
+* **Sem suporte a macOS**, e não é só questão de portar a bandeja. No macOS o
+  Claude Code guarda as credenciais no Keychain, identificadas pelo usuário do
+  sistema e não pelo diretório de configuração. Se o Keychain guardar uma
+  credencial só, trocar o `CLAUDE_CONFIG_DIR` não troca a conta, e a ideia
+  inteira não se sustenta lá. Isso precisa ser verificado em uma máquina Mac
+  antes de qualquer porte.
 * **A troca só vale para sessões novas.** Isso é intencional e é o ponto do
   projeto, mas vale dizer: não existe trocar a conta de uma sessão em andamento
   sem derrubá-la.
