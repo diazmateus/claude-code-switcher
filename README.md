@@ -66,9 +66,7 @@ executa o Claude Code de verdade.
     sessões que já estavam rodando: intocadas
 ```
 
-## Instalação
-
-### Antes de começar
+## Requisitos
 
 **Linux com um indicador de bandeja.** No Ubuntu com GNOME a extensão
 `ubuntu-appindicators` já vem habilitada. Em outros ambientes, instale o suporte
@@ -77,21 +75,9 @@ a AppIndicator do seu desktop.
 **Claude Code instalado.** Se ainda não tem, veja
 [claude.com/claude-code](https://claude.com/claude-code).
 
-**Rust**, apenas se você for compilar do código. Quem instala pelo binário
-pronto não precisa. A forma oficial é:
+## Instalação rápida
 
-```sh
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source "$HOME/.cargo/env"
-```
-
-Confira com `cargo --version`. Também dá para instalar pelo gerenciador de
-pacotes (`apt install cargo`, `dnf install cargo`), mas versões de distribuição
-costumam ficar para trás. É preciso Rust 1.85 ou mais novo.
-
-### Instalar
-
-A forma mais curta, com o binário já compilado:
+Binário pronto, sem precisar de Rust nem clonar o repositório:
 
 ```sh
 curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/diazmateus/claude-code-switcher/main/install.sh | sh
@@ -102,14 +88,32 @@ O script baixa o binário da release mais recente, confere o checksum e coloca e
 preferir ler antes de executar, e é uma boa prática, abra o
 [install.sh](install.sh).
 
-Se você já tem Rust e prefere compilar, dá para instalar direto do repositório
-sem clonar nada:
+O binário é estaticamente ligado, então roda em qualquer distro sem depender da
+versão da glibc da sua máquina.
+
+Depois de instalar, siga para [Primeiros passos](#primeiros-passos).
+
+## Compilar do código-fonte
+
+Este caminho exige **Rust 1.85 ou mais novo**. Se você não tem, a forma oficial
+de instalar é:
+
+```sh
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source "$HOME/.cargo/env"
+```
+
+Confira com `cargo --version`. Também dá para instalar pelo gerenciador de
+pacotes (`apt install cargo`, `dnf install cargo`), mas versões de distribuição
+costumam ficar para trás.
+
+Com Rust no lugar, dá para instalar direto do repositório, sem clonar:
 
 ```sh
 cargo install --git https://github.com/diazmateus/claude-code-switcher
 ```
 
-Ou clonando, se quiser mexer no código:
+Ou clonando, se você quiser mexer no código:
 
 ```sh
 git clone https://github.com/diazmateus/claude-code-switcher
@@ -117,6 +121,10 @@ cd claude-code-switcher
 cargo build --release
 install -m 755 target/release/ccswitch ~/.local/bin/ccswitch
 ```
+
+## Primeiros passos
+
+Valem para os dois caminhos de instalação.
 
 ### Registrar suas contas
 
@@ -308,12 +316,6 @@ menu apenas recolhe o resultado pronto, sem nunca travar.
 * **As credenciais ficam onde o Claude Code as põe.** Este projeto não lê, não
   copia e não move nenhum token, exceto para ler o `accessToken` da própria
   conta no momento de consultar a cota.
-
-## Requisitos
-
-* Linux com um indicador de bandeja. No GNOME, a extensão AppIndicator.
-* Rust 1.85 ou mais novo para compilar.
-* Claude Code instalado.
 
 ## Licença
 
